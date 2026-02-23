@@ -106,6 +106,8 @@ LLM(
     retry_times: int = 5,                         # Number of retries on failure
     retry_interval_seconds: float = 6.0,          # Interval between retries
     log_dir_path: PathLike | None = None,         # Log directory path
+    provider: dict | None = None,                 # Provider routing config for OpenRouter (request body)
+    headers: dict[str, str] | None = None,        # Custom headers (e.g. HTTP-Referer / X-Title)
 )
 ```
 
@@ -321,6 +323,53 @@ llm = LLM(
     token_encoding="o200k_base",  # Match your model's encoding
 )
 ```
+
+### OpenRouter (Provider Routing + Custom Headers)
+
+This project supports passing:
+- `provider` in the request body (internally via OpenAI SDK `extra_body`)
+- `headers` in request headers (internally via OpenAI SDK `default_headers`)
+
+```python
+llm = LLM(
+    key="sk-or-v1-...",
+    url="https://openrouter.ai/api/v1",
+    model="anthropic/claude-sonnet-4-20250514",
+    token_encoding="o200k_base",
+    provider={
+        "order": ["Azure", "Anthropic"],
+        "allow_fallbacks": False,
+    },
+    headers={
+        "HTTP-Referer": "https://your-site.example",  # Optional, recommended
+        "X-Title": "EPUB Translator",                 # Optional, recommended
+    },
+)
+```
+
+If you use scripts with `format.json` (copied from `format.template.json`):
+
+```json
+{
+  "key": "sk-or-v1-...",
+  "url": "https://openrouter.ai/api/v1",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "provider": {
+    "order": ["Azure", "Anthropic"],
+    "allow_fallbacks": false
+  },
+  "headers": {
+    "HTTP-Referer": "https://your-site.example",
+    "X-Title": "EPUB Translator"
+  },
+  "token_encoding": "o200k_base"
+}
+```
+
+Notes:
+- `provider.order`: provider priority order
+- `provider.allow_fallbacks=false`: only use the specified providers; no automatic fallback
+- `headers` is optional; use it if OpenRouter requires/recommends app or site identification
 
 ## Advanced Features
 

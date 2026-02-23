@@ -2,6 +2,7 @@ from collections.abc import Callable
 from io import StringIO
 from logging import Logger
 from time import sleep
+from typing import Any
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -22,6 +23,8 @@ class LLMExecutor:
         retry_interval_seconds: float,
         create_logger: Callable[[], Logger | None],
         statistics: Statistics,
+        provider: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self._model_name: str = model
         self._timeout: float | None = timeout
@@ -29,10 +32,12 @@ class LLMExecutor:
         self._retry_interval_seconds: float = retry_interval_seconds
         self._create_logger: Callable[[], Logger | None] = create_logger
         self._statistics = statistics
+        self._provider = provider
         self._client = OpenAI(
             api_key=api_key,
             base_url=url,
             timeout=timeout,
+            default_headers=headers,
         )
 
     def request(
@@ -155,15 +160,19 @@ class LLMExecutor:
                     }
                 )
 
-        stream = self._client.chat.completions.create(
-            model=self._model_name,
-            messages=messages,
-            stream=True,
-            stream_options={"include_usage": True},
-            top_p=top_p,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        request_kwargs: dict[str, Any] = {
+            "model": self._model_name,
+            "messages": messages,
+            "stream": True,
+            "stream_options": {"include_usage": True},
+            "top_p": top_p,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        if self._provider is not None:
+            request_kwargs["extra_body"] = {"provider": self._provider}
+
+        stream = self._client.chat.completions.create(**request_kwargs)
         buffer = StringIO()
         for chunk in stream:
             if chunk.choices and chunk.choices[0].delta.content:

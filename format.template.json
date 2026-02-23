@@ -2,6 +2,14 @@
   "key": "<YOUR_API_KEY>",
   "url": "https://sample-llm.com/v1",
   "model": "sample-llm-model",
+  "provider": {
+    "order": ["Azure", "Anthropic"],
+    "allow_fallbacks": false
+  },
+  "headers": {
+    "HTTP-Referer": "https://your-site.example",
+    "X-Title": "EPUB Translator"
+  },
   "token_encoding": "sample-token-encoding",
   "timeout": 360.0,
   "retry_times": 10,

@@ -106,6 +106,8 @@ LLM(
     retry_times: int = 5,                         # 失败重试次数
     retry_interval_seconds: float = 6.0,          # 重试间隔(秒)
     log_dir_path: PathLike | None = None,         # 日志目录路径
+    provider: dict | None = None,                 # 兼容 OpenRouter 的 provider 路由配置（请求 body）
+    headers: dict[str, str] | None = None,        # 自定义请求头（如 HTTP-Referer / X-Title）
 )
 ```
 
@@ -321,6 +323,53 @@ llm = LLM(
     token_encoding="o200k_base",  # 匹配您模型的编码方式
 )
 ```
+
+### OpenRouter（provider 路由 + 自定义 headers）
+
+已支持通过 OpenAI Python SDK 传递：
+- `provider`（请求 body，内部通过 `extra_body` 注入）
+- `headers`（请求 header，内部通过 `default_headers` 注入）
+
+```python
+llm = LLM(
+    key="sk-or-v1-...",
+    url="https://openrouter.ai/api/v1",
+    model="anthropic/claude-sonnet-4-20250514",
+    token_encoding="o200k_base",
+    provider={
+        "order": ["Azure", "Anthropic"],
+        "allow_fallbacks": False,
+    },
+    headers={
+        "HTTP-Referer": "https://your-site.example",  # 可选，建议填写
+        "X-Title": "EPUB Translator",                 # 可选，建议填写
+    },
+)
+```
+
+如果你使用脚本并通过 `format.json` 配置（从 `format.template.json` 复制）：
+
+```json
+{
+  "key": "sk-or-v1-...",
+  "url": "https://openrouter.ai/api/v1",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "provider": {
+    "order": ["Azure", "Anthropic"],
+    "allow_fallbacks": false
+  },
+  "headers": {
+    "HTTP-Referer": "https://your-site.example",
+    "X-Title": "EPUB Translator"
+  },
+  "token_encoding": "o200k_base"
+}
+```
+
+说明：
+- `provider.order`：按顺序尝试你指定的 provider
+- `provider.allow_fallbacks=false`：仅使用你指定的 provider，不自动 fallback 到其他 provider
+- `headers` 为可选；如果 OpenRouter 要求或建议提供站点标识，请在这里设置
 
 ## 高级功能
 

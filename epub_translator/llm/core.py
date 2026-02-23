@@ -5,6 +5,7 @@ from importlib.resources import files
 from logging import DEBUG, FileHandler, Formatter, Logger, getLogger
 from os import PathLike
 from pathlib import Path
+from typing import Any
 
 from jinja2 import Environment, Template
 from tiktoken import Encoding, get_encoding
@@ -36,6 +37,8 @@ class LLM:
         retry_interval_seconds: float = 6.0,
         cache_path: PathLike | str | None = None,
         log_dir_path: PathLike | str | None = None,
+        provider: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         prompts_path = Path(str(files("epub_translator"))) / "data"
         self._templates: dict[str, Template] = {}
@@ -55,6 +58,8 @@ class LLM:
             retry_interval_seconds=retry_interval_seconds,
             create_logger=self._create_logger,
             statistics=self._statistics,
+            provider=provider,
+            headers=headers,
         )
 
     @property
