@@ -1,13 +1,12 @@
 import os
 from pathlib import Path
 
-from epub_translator import SubmitKind, translate
+from epub_translator import SubmitKind, translate, language
 from epub_translator.llm.core import LLM
 
-
 def main() -> None:
-    source_path = Path("book.epub")  # 修改为你的 EPUB 文件路径
-    target_path = Path("book.zh-cn.bilingual.epub")
+    source_path = Path("source.epub")
+    target_path = Path("target.epub")
 
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
@@ -16,26 +15,28 @@ def main() -> None:
     llm = LLM(
         key=api_key,
         url="https://openrouter.ai/api/v1",
-        model="anthropic/claude-sonnet-4-20250514",
+        model="z-ai/glm-5",
         token_encoding="o200k_base",
-        timeout=360.0,
+        # timeout=360.0,
         provider={
-            "order": ["Azure", "Anthropic"],
+            "order": ["atlas-cloud/fp8"],
             "allow_fallbacks": False,
         },
         headers={
-            "HTTP-Referer": "https://your-site.example",  # 建议填写你自己的站点
-            "X-Title": "EPUB Translator Example",
+            # "HTTP-Referer": "https://your-site.example",  # 建议填写你自己的站点
+            "X-Title": "EPUB Translator",
         },
+        log_dir_path="logs",
+        cache_path="./cache",
     )
 
     translate(
         source_path=source_path,
         target_path=target_path,
-        target_language="Chinese",
+        target_language=language.TRADITIONAL_CHINESE,
         submit=SubmitKind.APPEND_BLOCK,
         llm=llm,
-        concurrency=2,
+        concurrency=4,
     )
 
 
